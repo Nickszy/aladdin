@@ -6,6 +6,7 @@ import reflex as rx
 
 from .. import styles
 from ..templates import template
+from ..utils.logger import log_debug
 
 
 @template(route="/about", title="About")
@@ -17,5 +18,5 @@ def about() -> rx.Component:
     """
     with Path("README.md").open(encoding="utf-8") as readme:
         content = readme.read()
-        print(content)
+        log_debug("README content loaded")
     return rx.markdown(content, component_map=styles.markdown_style)

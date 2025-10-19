@@ -16,6 +16,7 @@ from aladdin.models.entry import Entry as db_Entry
 
 from aladdin.models.feed import sql_Feed, Feed
 from aladdin.services.tag_service import TaggingService
+from aladdin.utils.logger import log_info, log_error, log_debug
 
 # Create a FastAPI app
 fastapi_app = FastAPI(title="aladdin")
@@ -24,7 +25,7 @@ fastapi_app = FastAPI(title="aladdin")
 # Add routes to the FastAPI app
 @fastapi_app.get("/api/items")
 async def get_items():
-    print("get_items")
+    log_info("get_items")
     return dict(items=["Item1", "Item2", "Item3"])
 
 
@@ -130,7 +131,7 @@ async def webhook_handler(
         )
         # 修改为await调用
         db_feed = await DataService(engine).upsert(db_feed, keys=("id",))
-        print("数据库保存成功")
+        log_info("数据库保存成功")
 
         # 保存feed
         feed = Feed(
@@ -153,7 +154,7 @@ async def webhook_handler(
         supabase = await get_supabase_client()
         response = await supabase.table("feed").upsert(feed.model_dump_json()).execute()
 
-        print(f"subapase保存成功 {db_feed.title} {db_feed.url}")
+        log_info(f"subapase保存成功 {db_feed.title} {db_feed.url}")
 
         # 保存entry
         media_list = payload.entry.media or "[]"
@@ -179,7 +180,7 @@ async def webhook_handler(
         db_entry = await EntryService(session).upsert(db_entry, keys=("guid",))
         # print(db_entry)
 
-        print(f"数据库保存成功 {db_entry.title} {db_entry.guid}")
+        log_info(f"数据库保存成功 {db_entry.title} {db_entry.guid}")
         # ai = AIService(
         #     api_key="123456",
         #     base_url="http://100.64.0.2/e/l3m9vpgyzoq9vj9c",
@@ -210,7 +211,7 @@ async def webhook_handler(
 
     except Exception as e:
         session.rollback()
-        print(f"数据库保存失败: {e}   {payload}")
+        log_error(f"数据库保存失败: {e}   {payload}")
 
     # try:
     #     await send_to_feishu(payload)

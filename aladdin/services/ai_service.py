@@ -2,6 +2,7 @@ import openai
 from openai import OpenAI, AsyncOpenAI
 import asyncio
 from typing import Dict, Any, Optional, List
+from ..utils.logger import log_info, log_error
 
 
 class AIService:
@@ -43,7 +44,7 @@ class AIService:
         # 如果仍然没有model，则抛出异常
 
         try:
-            print("开始请求")
+            log_info("Starting OpenAI request")
             # 使用 asyncio.get_event_loop() 在线程池中运行阻塞操作
             loop = asyncio.get_event_loop()
             # 修改为使用新的API调用方式
@@ -55,9 +56,10 @@ class AIService:
                     stream=False,
                 ),
             )
-            print("请求成功", response)
+            log_info(f"OpenAI request successful: {response}")
             return response
         except Exception as e:
+            log_error(f"OpenAI request failed: {str(e)}")
             return {"error": str(e)}
 
     async def request_completion(

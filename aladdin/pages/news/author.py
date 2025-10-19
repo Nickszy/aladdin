@@ -10,6 +10,7 @@ from aladdin.models.feed import Feed
 from aladdin.models.entry import Entry
 from aladdin.db import engine
 from aladdin.services.supabase import get_supabase_client
+from aladdin.utils.logger import log_debug
 import reflex_chakra as rc
 
 
@@ -106,7 +107,7 @@ class AuthorState(rx.State):
             columns=[c.capitalize() for c in columns],
             rows=rows,
         )
-        print(self.data_table)
+        log_debug(self.data_table)
 
 
 def author_card() -> rx.Component:

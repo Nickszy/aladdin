@@ -7,6 +7,7 @@ from aladdin.services.ai_service import AIService
 from aladdin.models.tag import Tag
 import json
 import logging
+from aladdin.utils.logger import log_info, log_error, log_debug
 
 # 设置日志
 logger = logging.getLogger(__name__)
@@ -49,8 +50,8 @@ class TaggingService:
         # 这里需要根据实际的返回格式进行解析
         # 假设返回的是完整的JSON格式
         try:
-            print("AI返回结果:")
-            print(response)
+            log_info("AI返回结果:")
+            log_info(response)
             # 提取AI返回的文本内容
             ai_text = response.choices[0].message.content
 
@@ -97,7 +98,7 @@ class TaggingService:
         """
         try:
             # 调用AI生成标签
-            print(f"Generating tags for entry {entry.id}...")
+            log_info(f"Generating tags for entry {entry.id}...")
             tags, chat_id = await self.generate_tags_for_entry(entry.content_text)
 
             # 把之前的标签置否
@@ -114,5 +115,5 @@ class TaggingService:
             return tags
         except Exception as e:
             # 记录错误日志
-            logger.error(f"处理条目 { entry.id} 时出错: {str(e)}")
+            log_error(f"处理条目 { entry.id} 时出错: {str(e)}")
             raise

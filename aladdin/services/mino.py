@@ -11,6 +11,7 @@ import asyncio
 import httpx
 from PIL import Image
 from io import BytesIO
+from aladdin.utils.logger import log_info, log_error
 
 import binascii
 import json
@@ -162,7 +163,7 @@ class Mino:
 
         url = f"{self.base_url}/yb/list"
         res = self.request("POST", url, body=search_params)
-        print(res)
+        log_info(res)
         df = pd.DataFrame(res["data"]["list"])
 
         # 补充可能缺失的字段
@@ -235,13 +236,13 @@ class Mino:
                 img_data = response.content
                 image = Image.open(BytesIO(img_data))
                 image.save(save_path)
-                print(f"Downloaded page to {save_path}")
+                log_info(f"Downloaded page to {save_path}")
             else:
-                print(
+                log_error(
                     f"Failed to download image from {url} with status {response.status_code}"
                 )
         except Exception as e:
-            print(f"Error downloading image from {url}: {str(e)}")
+            log_error(f"Error downloading image from {url}: {str(e)}")
 
     def merge_images_to_pdf(self, image_paths, output_pdf_path):
         """合并图片为PDF"""
@@ -253,7 +254,7 @@ class Mino:
             resolution=100.0,
             quality=95,
         )
-        print(f"PDF saved to {output_pdf_path}")
+        log_info(f"PDF saved to {output_pdf_path}")
 
     async def download_pdf(self, research_info):
         """下载研报PDF"""
@@ -303,5 +304,5 @@ await mino.download_pdf(research_info)
 
 # 搜索公司
 companies = mino.get_company_list("蔚来")
-print(companies)
+log_info(companies)
 """

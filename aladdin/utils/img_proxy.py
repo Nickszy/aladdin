@@ -77,6 +77,7 @@ def replace_img_url_if_need(
 
 
 from bs4 import BeautifulSoup
+from aladdin.utils.logger import log_info
 
 
 def process_img_src_in_html(html: str, in_browser: bool = True) -> str:
@@ -103,4 +104,4 @@ if __name__ == "__main__":
         "https://example.com/normal.jpg",
     ]
     for u in test_urls:
-        print(u, "->", replace_img_url_if_need(url=u, in_browser=True))
+        log_info(f"{u} -> {replace_img_url_if_need(url=u, in_browser=True)}")

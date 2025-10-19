@@ -2,6 +2,7 @@ from sqlmodel import Session, select
 from typing import List, Optional
 from aladdin.models.yb import IfindYb
 from datetime import date
+from ..utils.logger import log_debug
 
 
 class YbService:
@@ -33,7 +34,7 @@ class YbService:
             statement = statement.where(IfindYb.code == code)
         if declare_date:
             statement = statement.where(IfindYb.declaredate == declare_date)
-        print(statement.whereclause)
+        log_debug(f"YB query statement: {statement.whereclause}")
 
         statement = statement.order_by(IfindYb.seq.desc()).offset(offset).limit(limit)
 
@@ -56,7 +57,7 @@ class YbService:
         """获取所有行业分类"""
         # statement = select(IfindYb.hangye1).where(IfindYb.isvalid == 1).distinct()
         # result = self.session.exec(statement)
-        print("get_all_industries")
+        log_debug("Getting all industries")
         return [
             "宏观经济",
             "个股研究",

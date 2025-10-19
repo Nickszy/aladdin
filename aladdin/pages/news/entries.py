@@ -24,6 +24,7 @@ from aladdin.services.entry_service import EntryService
 from aladdin.services.feed_service import FeedService  # 添加导入
 from aladdin.db import engine
 from aladdin.utils.img_proxy import process_img_src_in_html
+from aladdin.utils.logger import log_debug, log_info
 
 # supabase = get_supabase_client()
 
@@ -49,8 +50,8 @@ class FeedState(rx.State):
 
     @rx.event
     async def load_feeds(self) -> None:
-        print(self.platform_filter)
-        print("获取feed", datetime.now())
+        log_debug(self.platform_filter)
+        log_info(f"获取feed {datetime.now()}")
         supabase = await get_supabase_client()
         statement = supabase.table("feed").select("*", count="planned")
         if self.platform_filter:
@@ -67,7 +68,7 @@ class FeedState(rx.State):
             .offset(self.feed_page_size * (self.current_page - 1))
             .execute()
         )
-        print("获取feed成功", datetime.now())
+        log_info(f"获取feed成功 {datetime.now()}")
 
         self.total_feeds = res.count
         self.feeds = res.data
@@ -90,14 +91,14 @@ class FeedState(rx.State):
             return rx.redirect("/feeds")
         self.current_page = 1
         self.current_feed_id = self.feed_id
-        print(f"加载 {self.current_page} 页数据, feed_id: {self.current_feed_id}")
+        log_debug(f"加载 {self.current_page} 页数据, feed_id: {self.current_feed_id}")
         await self._fetch_feed_info()
         await self._fetch_entries()
 
     @rx.event
     async def set_page(self, page: int) -> None:
         self.entries_current_page = page
-        print(f"切换页面 {page}")
+        log_debug(f"切换页面 {page}")
         await self._fetch_entries()
 
     # 获取相关的标签数据
@@ -111,11 +112,11 @@ class FeedState(rx.State):
                 self.tags = []
 
     async def _fetch_entries(self) -> None:
-        print(f"查询: {self.current_feed_id}", datetime.now())
-        print("创建supabase", datetime.now())
+        log_debug(f"查询: {self.current_feed_id}")
+        log_info(f"创建supabase {datetime.now()}")
         supabase = await get_supabase_client()
-        print("创建supabase 成功", datetime.now())
-        print("获取entry", datetime.now())
+        log_info(f"创建supabase 成功 {datetime.now()}")
+        log_info(f"获取entry {datetime.now()}")
         res = (
             await supabase.table("entry")
             .select("*", count="exact")
@@ -125,7 +126,7 @@ class FeedState(rx.State):
             .offset((self.entries_current_page - 1) * self.entries_page_size)
             .execute()
         )
-        print("获取entry成功", datetime.now())
+        log_info(f"获取entry成功 {datetime.now()}")
         self.entries = res.data
         self.total_entries = res.count
         # with Session(engine) as session:
@@ -140,7 +141,7 @@ class FeedState(rx.State):
         #     # )
 
     async def _fetch_feed_info(self) -> None:  # 添加获取feed信息的方法
-        print("获取feed info", datetime.now())
+        log_info(f"获取feed info {datetime.now()}")
         supabase = await get_supabase_client()
         res = (
             await supabase.table("feed")
@@ -148,7 +149,7 @@ class FeedState(rx.State):
             .eq("id", self.current_feed_id)
             .execute()
         )
-        print("获取feed info成功", datetime.now())
+        log_info(f"获取feed info成功 {datetime.now()}")
 
         self.current_feed = res.data[0]
 

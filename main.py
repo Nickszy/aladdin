@@ -1,5 +1,7 @@
+from aladdin.utils.logger import log_info
+
 def main():
-    print("Hello from aladdin!")
+    log_info("Hello from aladdin!")
 
 
 if __name__ == "__main__":

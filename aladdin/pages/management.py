@@ -7,6 +7,7 @@ import httpx
 from typing import List, Optional
 
 from aladdin.services.supabase import get_supabase_client
+from aladdin.utils.logger import log_debug
 from .profile import ProfileState
 from ..templates import template
 
@@ -135,7 +136,7 @@ class ManagementState(rx.State):
                     .upsert(self.feeds[i].model_dump())
                     .execute()
                 )
-                print(self.feeds[i].model_dump(), res)
+                log_debug(f"{self.feeds[i].model_dump()} {res}")
 
         self.cancel_edit_feed()
 

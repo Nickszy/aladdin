@@ -28,6 +28,7 @@ from aladdin.services.entry_service import EntryService
 from aladdin.services.feed_service import FeedService  # 添加导入
 from aladdin.db import engine
 from aladdin.utils.img_proxy import process_img_src_in_html
+from aladdin.utils.logger import log_debug, log_info, log_error
 
 from typing import Optional
 from pydantic import BaseModel, field_serializer, ConfigDict
@@ -119,8 +120,8 @@ class FeedState(rx.State):
 
     @rx.event
     async def load_feeds(self) -> None:
-        print(self.platform_filter)
-        print("获取feed", datetime.now())
+        log_debug(self.platform_filter)
+        log_info(f"获取feed {datetime.now()}")
         supabase = await get_supabase_client()
         statement = supabase.table("feed").select("*", count="planned")
         if self.platform_filter:
@@ -136,7 +137,7 @@ class FeedState(rx.State):
             .offset(self.feed_page_size * (self.current_page - 1))
             .execute()
         )
-        print("获取feed成功", datetime.now())
+        log_info(f"获取feed成功 {datetime.now()}")
 
         self.total_feeds = res.count
         self.feeds = [feed(**f) for f in res.data]
@@ -152,7 +153,7 @@ class FeedState(rx.State):
 
     @rx.event
     async def set_feed_page(self, page: int) -> None:
-        print(f"切换到 {page} 页")
+        log_debug(f"切换到 {page} 页")
         self.current_page = page
         await self.load_feeds()
 
@@ -179,41 +180,41 @@ class FeedState(rx.State):
                 "user": "2323",
             }
 
-            print(f"发送请求到: {URL}")
-            # print(f"Payload: {payload}")
+            log_info(f"发送请求到: {URL}")
+            # log_debug(f"Payload: {payload}")
 
             async with httpx.AsyncClient(timeout=300) as client:
                 r = await client.post(URL, json=payload, headers=headers)
-                print(f"响应状态码: {r.status_code}")
-                print(f"响应内容: {r.text}")
+                log_info(f"响应状态码: {r.status_code}")
+                log_info(f"响应内容: {r.text}")
 
                 r.raise_for_status()
                 data = r.json()
 
             # 调试输出
-            print(f"完整响应: {json.dumps(data, indent=2, ensure_ascii=False)}")
+            log_debug(f"完整响应: {json.dumps(data, indent=2, ensure_ascii=False)}")
 
             # 修正数据提取逻辑
             if "data" in data and "outputs" in data["data"]:
                 ret = json.loads(data["data"]["outputs"]["result"])
-                print(f"解析到的输出: {ret}")
+                log_debug(f"解析到的输出: {ret}")
 
                 # 确保 ret 是列表
                 if isinstance(ret, list):
                     for i in ret:
                         await self.insert_investment_analysis(entryid, i)
                 else:
-                    print(f"输出不是列表格式: {type(ret)}")
+                    log_error(f"输出不是列表格式: {type(ret)}")
             else:
-                print("响应中未找到 data.outputs 字段")
+                log_error("响应中未找到 data.outputs 字段")
 
         except httpx.HTTPStatusError as e:
-            print(f"HTTP错误: {e}")
-            print(f"响应内容: {e.response.text}")
+            log_error(f"HTTP错误: {e}")
+            log_error(f"响应内容: {e.response.text}")
         except json.JSONDecodeError as e:
-            print(f"JSON解析错误: {e}")
+            log_error(f"JSON解析错误: {e}")
         except Exception as e:
-            print(f"其他错误: {e}")
+            log_error(f"其他错误: {e}")
 
     async def insert_investment_analysis(self, entryid: str, data: dict) -> None:
         """
@@ -238,14 +239,14 @@ class FeedState(rx.State):
             response = await supabase.table("analysis").upsert(insert_data).execute()
 
             if response.data:
-                print("数据插入成功！")
+                log_info("数据插入成功！")
                 return response.data[0]
             else:
-                print("数据插入失败")
+                log_error("数据插入失败")
                 return None
 
         except Exception as e:
-            print(f"插入数据时出错: {e}")
+            log_error(f"插入数据时出错: {e}")
             return None
 
     @rx.event
@@ -254,7 +255,7 @@ class FeedState(rx.State):
             return rx.redirect("/feeds")
         self.entries_current_page = 1
         # self.current_feed_id = "55854542499971072"
-        print(f"加载 {self.current_page} 页数据, feed_id: {self.current_feed_id}")
+        log_debug(f"加载 {self.current_page} 页数据, feed_id: {self.current_feed_id}")
         await self._fetch_entries()
 
     @rx.event
@@ -263,7 +264,7 @@ class FeedState(rx.State):
             self.current_feed.append(feed)
             # print(f"增加feed {feed}")
             await self._fetch_entries()
-        print(f"当前feed: {self.current_feed}")
+        log_debug(f"当前feed: {self.current_feed}")
 
     # 添加删除单个选中feed的功能
     @rx.event
@@ -280,7 +281,7 @@ class FeedState(rx.State):
     @rx.event
     async def set_page(self, page: int) -> None:
         self.entries_current_page = page
-        print(f"切换页面 {page}")
+        log_debug(f"切换页面 {page}")
         await self._fetch_entries()
 
     # 获取相关的标签数据
@@ -294,11 +295,11 @@ class FeedState(rx.State):
                 self.tags = []
 
     async def _fetch_entries(self) -> None:
-        print(f"查询: {self.current_feed_id}", datetime.now())
-        print("创建supabase", datetime.now())
+        log_debug(f"查询: {self.current_feed_id}")
+        log_info(f"创建supabase {datetime.now()}")
         supabase = await get_supabase_client()
-        print("创建supabase 成功", datetime.now())
-        print("获取entry", datetime.now())
+        log_info(f"创建supabase 成功 {datetime.now()}")
+        log_info(f"获取entry {datetime.now()}")
         statement = supabase.table("entry").select(
             "*,feed!inner(platform,image,title,author_id)", count="exact"
         )
@@ -317,7 +318,7 @@ class FeedState(rx.State):
             .offset((self.entries_current_page - 1) * self.entries_page_size)
             .execute()
         )
-        print("获取entry成功", datetime.now())
+        log_info(f"获取entry成功 {datetime.now()}")
         self.entries = [feedentry(**entry) for entry in res.data]
         self.total_entries = res.count
         # with Session(engine) as session:

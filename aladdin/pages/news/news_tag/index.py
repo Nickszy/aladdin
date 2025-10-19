@@ -5,6 +5,7 @@ from aladdin.models.tag import Tag
 from aladdin.templates import template
 from aladdin.db import engine
 from collections import defaultdict
+from aladdin.utils.logger import log_debug
 
 
 class TagState(rx.State):
@@ -70,7 +71,7 @@ class TagState(rx.State):
             )
 
             self.tag_group_count = session.exec(statement).all()
-            print(self.tag_group_count)
+            log_debug(self.tag_group_count)
 
 
 @template(
